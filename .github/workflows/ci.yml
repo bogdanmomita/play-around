@@ -15,6 +15,9 @@ jobs:
   # ─────────────────────────────────────────
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: todo-api
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -38,6 +41,9 @@ jobs:
   # ─────────────────────────────────────────
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: todo-api
     needs: lint  # only runs if lint passes
 
     steps:
@@ -77,6 +83,9 @@ jobs:
   # ─────────────────────────────────────────
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: todo-api
     needs: test  # only runs if tests pass
 
     steps:
