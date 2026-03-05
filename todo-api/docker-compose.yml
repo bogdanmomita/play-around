@@ -1,0 +1,62 @@
+version: "3.9"
+
+# docker-compose lets us define and run multiple containers as a single app.
+# All services defined here can talk to each other by their service name —
+# the API can reach postgres at hostname 'postgres', redis at 'redis'.
+# Docker's internal DNS handles this automatically.
+
+services:
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"   # host:container — visit localhost:8000 on your machine
+    environment:
+      # These override the defaults in our Python code.
+      # 'postgres' here refers to the service name below — Docker resolves it.
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/todos
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy  # Wait until postgres is actually ready
+      redis:
+        condition: service_healthy
+    # Mount source code as a volume for hot reload during development.
+    # Changes to ./app/ on your machine instantly appear inside the container.
+    volumes:
+      - ./app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: todos
+    ports:
+      - "5432:5432"   # Expose so you can connect with a DB client (DBeaver, etc.)
+    volumes:
+      # Named volume — data persists between docker-compose down/up.
+      # Without this, all your data is lost every time you restart.
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # Docker will wait for this command to succeed before starting the API.
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# Named volumes are managed by Docker and persist on the host machine.
+# docker-compose down does NOT delete them. docker-compose down -v does.
+volumes:
+  postgres_data:
