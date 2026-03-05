@@ -98,9 +98,8 @@ jobs:
       - name: Build image (no push)
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: todo-api
           push: false
-          # Cache layers between runs — makes subsequent builds much faster
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: todo-api:${{ github.sha }}
