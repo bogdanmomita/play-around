@@ -1,3 +1,4 @@
-# ruff.toml
 line-length = 100
+
+[lint]
 ignore = ["E501"]
